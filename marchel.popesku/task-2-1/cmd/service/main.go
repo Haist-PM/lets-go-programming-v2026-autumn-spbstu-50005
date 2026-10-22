@@ -51,6 +51,7 @@ func (interval *temperatureInterval) apply(operator string, threshold int) error
 	default:
 		return fmt.Errorf("%w: %q", errUnknownOperator, operator)
 	}
+
 	return nil
 }
 
@@ -58,6 +59,7 @@ func (interval *temperatureInterval) optimal() int {
 	if interval.lower > interval.upper {
 		return unavailableTemperature
 	}
+
 	return interval.lower
 }
 
@@ -67,9 +69,11 @@ func readCount(name string) (int, error) {
 	if _, err := fmt.Scan(&count); err != nil {
 		return 0, fmt.Errorf("read %s count: %w", name, err)
 	}
+
 	if count <= 0 || count > maximumCount {
 		return 0, fmt.Errorf("%w: %s count must be between 1 and %d", errInvalidCount, name, maximumCount)
 	}
+
 	return count, nil
 }
 
@@ -81,19 +85,22 @@ func readRequirements() ([]requirement, error) {
 
 	requirements := make([]requirement, employeeCount)
 
-	for i := 0; i < employeeCount; i++ {
+	for employeeIndex := range employeeCount {
 		var (
 			operator  string
 			threshold int
 		)
+
 		if _, err := fmt.Scan(&operator, &threshold); err != nil {
-			return nil, fmt.Errorf("read requirement for employee %d: %w", i+1, err)
+			return nil, fmt.Errorf("read requirement for employee %d: %w", employeeIndex+1, err)
 		}
-		requirements[i] = requirement{
+
+		requirements[employeeIndex] = requirement{
 			operator:  operator,
 			threshold: threshold,
 		}
 	}
+
 	return requirements, nil
 }
 
@@ -105,6 +112,7 @@ func calculateTemperatures(requirements []requirement) ([]int, error) {
 		if err := interval.apply(current.operator, current.threshold); err != nil {
 			return nil, fmt.Errorf("employee %d: %w", i+1, err)
 		}
+
 		temperatures[i] = interval.optimal()
 	}
 
@@ -123,17 +131,20 @@ func run() error {
 		return err
 	}
 
-	for department := 0; department < departmentCount; department++ {
+	for department := range departmentCount {
 		requirements, err := readRequirements()
 		if err != nil {
 			return fmt.Errorf("department %d: %w", department+1, err)
 		}
+
 		temperatures, err := calculateTemperatures(requirements)
 		if err != nil {
 			return fmt.Errorf("department %d: %w", department+1, err)
 		}
+
 		printTemperatures(temperatures)
 	}
+
 	return nil
 }
 
